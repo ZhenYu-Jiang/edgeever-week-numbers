@@ -1,0 +1,65 @@
+/* 周数表插件样式（ISO 8601 周数日历）—— EdgeEver 随插件加载本文件 */
+.wn-root {
+  --wn-accent: #168363;
+  --wn-surface: Canvas;
+  --wn-quiet: color-mix(in srgb, currentColor 58%, transparent);
+  --wn-line: color-mix(in srgb, currentColor 10%, transparent);
+  --wn-hover: color-mix(in srgb, currentColor 4%, transparent);
+  --wn-selected: color-mix(in srgb, var(--wn-accent) 9%, var(--wn-surface));
+  box-sizing: border-box; width: 100%; height: min(640px, 70dvh);
+  display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 18px; padding: 20px; min-width: 0; min-height: 0;
+  font-family: inherit; font-size: 13px; line-height: 1.5;
+  color: inherit; background: var(--wn-surface);
+  container-type: inline-size;
+}
+.wn-root *, .wn-root *::before, .wn-root *::after { box-sizing: border-box; }
+@media (prefers-color-scheme: dark) {
+  .wn-root { color-scheme: dark; --wn-accent: #65c7a5; }
+}
+:where([data-theme="dark"], .dark) .wn-root {
+  color-scheme: dark; --wn-accent: #65c7a5;
+}
+:where([data-theme="light"], .light) .wn-root {
+  color-scheme: light; --wn-accent: #168363;
+}
+.wn-summary { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.wn-summary-copy { display: grid; gap: 4px; min-width: 0; }
+.wn-eyebrow { color: var(--wn-quiet); font-size: 12px; }
+.wn-week { font-size: 30px; line-height: 1.2; font-weight: 650; letter-spacing: -0.04em; }
+.wn-range, .wn-year, .wn-table { font-variant-numeric: tabular-nums; }
+.wn-range { color: var(--wn-quiet); font-size: 12px; }
+.wn-summary-mark { color: var(--wn-accent); font-size: 11px; border: 1px solid var(--wn-line); padding: 3px 8px; border-radius: 5px; white-space: nowrap; }
+.wn-nav { display: flex; align-items: center; gap: 6px; padding-top: 14px; border-top: 1px solid var(--wn-line); }
+.wn-nav button {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0; min-width: 32px; height: 32px; padding: 0 9px;
+  border: 1px solid transparent; border-radius: 5px;
+  background: transparent; color: inherit; font: inherit; cursor: pointer;
+}
+.wn-nav button:hover { background: var(--wn-hover); border-color: var(--wn-line); }
+.wn-nav button:focus-visible, .wn-scroll:focus-visible { outline: 2px solid var(--wn-accent); outline-offset: 2px; }
+.wn-nav .wn-arrow { font-size: 23px; line-height: 1; }
+.wn-year { font-weight: 600; font-size: 14px; text-align: center; min-width: 76px; }
+.wn-nav .wn-today { margin-left: auto; font-size: 12px; color: var(--wn-quiet); border-color: var(--wn-line); }
+.wn-scroll { min-width: 0; min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; border: 1px solid var(--wn-line); border-radius: 6px; }
+.wn-table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; text-align: left; white-space: nowrap; }
+.wn-table th, .wn-table td { height: 39px; padding: 8px 14px; text-align: left; }
+.wn-table th { position: sticky; top: 0; z-index: 1; height: 34px; background: var(--wn-surface); color: var(--wn-quiet); font-size: 11px; font-weight: 500; border-bottom: 1px solid var(--wn-line); }
+.wn-table th:first-child { width: 36%; }
+.wn-table td { border-bottom: 1px solid color-mix(in srgb, currentColor 5%, transparent); }
+.wn-table tbody tr:last-child td { border-bottom: 0; }
+.wn-table tbody tr:hover td { background: var(--wn-hover); }
+.wn-table .wn-current td, .wn-table .wn-current:hover td { background: var(--wn-selected); }
+.wn-table .wn-current td:first-child { box-shadow: inset 2px 0 var(--wn-accent); color: var(--wn-accent); font-weight: 600; }
+.wn-date-year { display: block; color: var(--wn-quiet); font-size: 10px; line-height: 1.2; }
+.wn-week-label { display: inline-block; min-width: 33px; }
+.wn-badge { margin-left: 7px; font-size: 10px; font-weight: 500; }
+.wn-foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; color: var(--wn-quiet); font-size: 11px; }
+@container (max-width: 340px) {
+  .wn-table th, .wn-table td { padding-inline: 9px; }
+  .wn-table th:first-child { width: 32%; }
+  .wn-week { font-size: 26px; }
+  .wn-badge { margin-left: 4px; }
+}
+@media (max-width: 420px) { .wn-root { padding: 14px; gap: 14px; } }

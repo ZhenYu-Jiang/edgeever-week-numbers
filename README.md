@@ -23,11 +23,11 @@
 https://github.com/ZhenYu-Jiang/edgeever-week-numbers
 ```
 
-发布版本时，在 GitHub Release 中附加本仓库的 `manifest.json` 和 `main.js`，并确保发布版本与清单版本一致。
+发布版本时，在 GitHub Release 中附加本仓库的 `manifest.json`、`main.js` 和 `styles.css` 三个文件，并确保发布版本与清单版本一致。
 
-## 1.0.1
+## 1.0.2
 
-此版本更新面板样式与展示，保留原有周数算法、命令标识和插入文本格式。
+此版本把面板样式从 `main.js` 拆分到 `styles.css`，补齐 EdgeEver 安装所需的样式资产，其余保持不变。
 
 - 当前周与日期范围摘要。
 - 紧凑年份导航与键盘焦点提示。
