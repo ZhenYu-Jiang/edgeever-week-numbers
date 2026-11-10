@@ -42,22 +42,70 @@ function fmt(d) {
 }
 
 const STYLE = `
-.wn-root { padding: 16px 20px; font-family: inherit; color: inherit; }
-.wn-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
-.wn-nav button {
-  padding: 6px 12px; font-size: 13px; cursor: pointer;
-  border: 1px solid rgba(128,128,128,0.35); border-radius: 8px;
-  background: transparent; color: inherit;
+.wn-root {
+  --wn-accent: #168363;
+  --wn-surface: Canvas;
+  --wn-quiet: color-mix(in srgb, currentColor 58%, transparent);
+  --wn-line: color-mix(in srgb, currentColor 10%, transparent);
+  --wn-hover: color-mix(in srgb, currentColor 4%, transparent);
+  --wn-selected: color-mix(in srgb, var(--wn-accent) 9%, var(--wn-surface));
+  box-sizing: border-box; width: 100%; height: min(640px, 70dvh);
+  display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 18px; padding: 20px; min-width: 0; min-height: 0;
+  font-family: inherit; font-size: 13px; line-height: 1.5;
+  color: inherit; background: var(--wn-surface);
+  container-type: inline-size;
 }
-.wn-nav button:hover { background: rgba(128,128,128,0.12); }
-.wn-year { flex: 1; text-align: center; font-size: 18px; font-weight: 600; min-width: 90px; }
-.wn-summary { margin-bottom: 12px; font-size: 13px; opacity: 0.7; }
-.wn-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-.wn-table th, .wn-table td { padding: 7px 12px; text-align: left; border-bottom: 1px solid rgba(128,128,128,0.18); }
-.wn-table th { font-weight: 600; opacity: 0.6; font-size: 13px; }
-.wn-table tr.wn-current td { background: rgba(22,160,110,0.14); font-weight: 600; }
-.wn-table tr.wn-current td:first-child { color: #16a06e; }
-.wn-foot { margin-top: 12px; font-size: 13px; opacity: 0.6; }
+.wn-root *, .wn-root *::before, .wn-root *::after { box-sizing: border-box; }
+@media (prefers-color-scheme: dark) {
+  .wn-root { color-scheme: dark; --wn-accent: #65c7a5; }
+}
+:where([data-theme="dark"], .dark) .wn-root {
+  color-scheme: dark; --wn-accent: #65c7a5;
+}
+:where([data-theme="light"], .light) .wn-root {
+  color-scheme: light; --wn-accent: #168363;
+}
+.wn-summary { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.wn-summary-copy { display: grid; gap: 4px; min-width: 0; }
+.wn-eyebrow { color: var(--wn-quiet); font-size: 12px; }
+.wn-week { font-size: 30px; line-height: 1.2; font-weight: 650; letter-spacing: -0.04em; }
+.wn-range, .wn-year, .wn-table { font-variant-numeric: tabular-nums; }
+.wn-range { color: var(--wn-quiet); font-size: 12px; }
+.wn-summary-mark { color: var(--wn-accent); font-size: 11px; border: 1px solid var(--wn-line); padding: 3px 8px; border-radius: 5px; white-space: nowrap; }
+.wn-nav { display: flex; align-items: center; gap: 6px; padding-top: 14px; border-top: 1px solid var(--wn-line); }
+.wn-nav button {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0; min-width: 32px; height: 32px; padding: 0 9px;
+  border: 1px solid transparent; border-radius: 5px;
+  background: transparent; color: inherit; font: inherit; cursor: pointer;
+}
+.wn-nav button:hover { background: var(--wn-hover); border-color: var(--wn-line); }
+.wn-nav button:focus-visible, .wn-scroll:focus-visible { outline: 2px solid var(--wn-accent); outline-offset: 2px; }
+.wn-nav .wn-arrow { font-size: 23px; line-height: 1; }
+.wn-year { font-weight: 600; font-size: 14px; text-align: center; min-width: 76px; }
+.wn-nav .wn-today { margin-left: auto; font-size: 12px; color: var(--wn-quiet); border-color: var(--wn-line); }
+.wn-scroll { min-width: 0; min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; border: 1px solid var(--wn-line); border-radius: 6px; }
+.wn-table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; text-align: left; white-space: nowrap; }
+.wn-table th, .wn-table td { height: 39px; padding: 8px 14px; text-align: left; }
+.wn-table th { position: sticky; top: 0; z-index: 1; height: 34px; background: var(--wn-surface); color: var(--wn-quiet); font-size: 11px; font-weight: 500; border-bottom: 1px solid var(--wn-line); }
+.wn-table th:first-child { width: 36%; }
+.wn-table td { border-bottom: 1px solid color-mix(in srgb, currentColor 5%, transparent); }
+.wn-table tbody tr:last-child td { border-bottom: 0; }
+.wn-table tbody tr:hover td { background: var(--wn-hover); }
+.wn-table .wn-current td, .wn-table .wn-current:hover td { background: var(--wn-selected); }
+.wn-table .wn-current td:first-child { box-shadow: inset 2px 0 var(--wn-accent); color: var(--wn-accent); font-weight: 600; }
+.wn-date-year { display: block; color: var(--wn-quiet); font-size: 10px; line-height: 1.2; }
+.wn-week-label { display: inline-block; min-width: 33px; }
+.wn-badge { margin-left: 7px; font-size: 10px; font-weight: 500; }
+.wn-foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; color: var(--wn-quiet); font-size: 11px; }
+@container (max-width: 340px) {
+  .wn-table th, .wn-table td { padding-inline: 9px; }
+  .wn-table th:first-child { width: 32%; }
+  .wn-week { font-size: 26px; }
+  .wn-badge { margin-left: 4px; }
+}
+@media (max-width: 420px) { .wn-root { padding: 14px; gap: 14px; } }
 `;
 
 export default {
@@ -100,7 +148,7 @@ export default {
         shell.set({
           header: {
             title: "周数表（ISO 8601）",
-            description: "每周从周一开始，第 1 周包含 1 月 4 日",
+            description: "查看全年周次与日期范围",
           },
         });
 
@@ -116,40 +164,74 @@ export default {
         container.append(root);
 
         function render() {
-          root.replaceChildren();
+          root.replaceChildren(style);
 
-          // 顶部：年份切换
+          // 当前周摘要：复用已有日期函数，仅调整展示
+          const sum = document.createElement("div");
+          sum.className = "wn-summary";
+          const t = isoWeekYearOf(new Date());
+          const start = mondayOfISOWeek(t.isoYear, t.week);
+          const end = new Date(start);
+          end.setUTCDate(start.getUTCDate() + 6);
+          const copy = document.createElement("div");
+          copy.className = "wn-summary-copy";
+          const eyebrow = document.createElement("div");
+          eyebrow.className = "wn-eyebrow";
+          eyebrow.textContent = "当前周 · ISO " + t.isoYear;
+          const headline = document.createElement("div");
+          headline.className = "wn-week";
+          headline.textContent = "第 " + t.week + " 周";
+          const range = document.createElement("div");
+          range.className = "wn-range";
+          range.textContent = fmt(start) + " — " + fmt(end);
+          copy.append(eyebrow, headline, range);
+          const mark = document.createElement("span");
+          mark.className = "wn-summary-mark";
+          mark.textContent = "本周";
+          sum.append(copy, mark);
+          root.append(sum);
+
+          // 年份切换
           const nav = document.createElement("div");
           nav.className = "wn-nav";
           const prev = document.createElement("button");
-          prev.textContent = "‹ 上一年";
+          prev.type = "button";
+          prev.className = "wn-arrow";
+          prev.textContent = "‹";
+          prev.title = "上一年";
+          prev.setAttribute("aria-label", "上一年");
           prev.onclick = () => { year -= 1; render(); };
           const label = document.createElement("div");
           label.className = "wn-year";
           label.textContent = `${year} 年`;
           const next = document.createElement("button");
-          next.textContent = "下一年 ›";
+          next.type = "button";
+          next.className = "wn-arrow";
+          next.textContent = "›";
+          next.title = "下一年";
+          next.setAttribute("aria-label", "下一年");
           next.onclick = () => { year += 1; render(); };
           const todayBtn = document.createElement("button");
+          todayBtn.type = "button";
+          todayBtn.className = "wn-today";
           todayBtn.textContent = "回到今年";
           todayBtn.onclick = () => { year = today.isoYear; render(); };
           nav.append(prev, label, next, todayBtn);
           root.append(nav);
 
-          // 当前周摘要
-          const sum = document.createElement("div");
-          sum.className = "wn-summary";
-          const t = isoWeekYearOf(new Date());
-          sum.textContent = `今天是 ${t.isoYear} 年第 ${t.week} 周`;
-          root.append(sum);
-
           // 周数表
           const weeks = weeksInISOYear(year);
+          const scroller = document.createElement("div");
+          scroller.className = "wn-scroll";
+          scroller.tabIndex = 0;
+          scroller.setAttribute("role", "region");
+          scroller.setAttribute("aria-label", year + "年周数表，可滚动");
           const table = document.createElement("table");
+          table.setAttribute("aria-label", "ISO " + year + "年周数与日期范围");
           table.className = "wn-table";
           const thead = document.createElement("thead");
           thead.innerHTML =
-            "<tr><th>周数</th><th>开始日期（周一）</th><th>结束日期（周日）</th></tr>";
+            '<tr><th scope="col">周次</th><th scope="col">周一</th><th scope="col">周日</th></tr>';
           table.append(thead);
 
           const tbody = document.createElement("tbody");
@@ -161,26 +243,60 @@ export default {
             const tr = document.createElement("tr");
             if (isCurrent) tr.className = "wn-current";
             const c1 = document.createElement("td");
-            c1.textContent = `第${w}周${isCurrent ? "（本周）" : ""}`;
+            const weekLabel = document.createElement("span");
+            weekLabel.className = "wn-week-label";
+            weekLabel.textContent = "W" + String(w).padStart(2, "0");
+            c1.append(weekLabel);
+            if (isCurrent) {
+              tr.setAttribute("aria-current", "date");
+              const badge = document.createElement("span");
+              badge.className = "wn-badge";
+              badge.textContent = "本周";
+              c1.append(badge);
+            }
             const c2 = document.createElement("td");
-            c2.textContent = fmt(m);
+            c2.textContent = fmt(m).slice(5).replace("-", ".");
+            if (m.getUTCFullYear() !== year) {
+              const dateYear = document.createElement("span");
+              dateYear.className = "wn-date-year";
+              dateYear.textContent = m.getUTCFullYear();
+              c2.prepend(dateYear);
+            }
+            c2.title = fmt(m);
             const c3 = document.createElement("td");
-            c3.textContent = fmt(s);
+            c3.textContent = fmt(s).slice(5).replace("-", ".");
+            if (s.getUTCFullYear() !== year) {
+              const dateYear = document.createElement("span");
+              dateYear.className = "wn-date-year";
+              dateYear.textContent = s.getUTCFullYear();
+              c3.prepend(dateYear);
+            }
+            c3.title = fmt(s);
             tr.append(c1, c2, c3);
             tbody.append(tr);
           }
           table.append(tbody);
-          root.append(table);
+          scroller.append(table);
+          root.append(scroller);
 
           const foot = document.createElement("div");
           foot.className = "wn-foot";
-          foot.textContent = `${year} 年共 ${weeks} 周`;
+          const rule = document.createElement("span");
+          rule.textContent = "周一开始 · ISO 8601";
+          rule.title = "第 1 周是包含 1 月 4 日的那一周";
+          const count = document.createElement("span");
+          count.textContent = "全年 " + weeks + " 周";
+          foot.append(rule, count);
           root.append(foot);
 
           // 自动滚动到当前周
           if (year === today.isoYear) {
             const cur = root.querySelector(".wn-current");
-            if (cur) cur.scrollIntoView({ block: "center" });
+            if (cur) {
+              // 只滚动表格，不移动宿主笔记页面。
+              const offset = cur.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+              scroller.scrollTop = Math.max(0, offset - (scroller.clientHeight - cur.clientHeight) / 2);
+            }
           }
         }
 
