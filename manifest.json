@@ -2,7 +2,7 @@
   "type": "plugin",
   "id": "com.example.week-numbers",
   "name": "Week Numbers",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "apiVersion": "2",
   "settingsUi": "host",
   "description": "ISO 8601 week-number calendar with the current week highlighted.",

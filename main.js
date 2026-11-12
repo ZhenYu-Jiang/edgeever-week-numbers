@@ -43,6 +43,9 @@ function fmt(d) {
 
 
 
+// Reports start blank; week numbers and dates belong to the separate range actions.
+const WEEKLY_REPORT_TEMPLATE = '### 本周完成工作\n\n\n### 下周工作计划\n\n\n### 本周工作总结\n\n\n### 需协调与帮助\n\n';
+
 export default {
   activate(context) {
     let commandBusy = false;
@@ -114,8 +117,8 @@ export default {
           root.querySelectorAll('button,input').forEach(node => { node.disabled = true; });
           try {
             if (kind === 'copy') await navigator.clipboard.writeText(text);
-            else await context.editor.insertAtCursor(kind === 'template' ? `## ${text}\n\n### 本周完成\n\n- \n\n### 下周计划\n\n- \n\n### 复盘\n\n` : text);
-            message = kind === 'copy' ? '已复制所选周及日期范围。' : kind === 'template' ? '已在光标处插入周报模板。' : '已插入所选周及日期范围。';
+            else await context.editor.insertAtCursor(kind === 'template' ? WEEKLY_REPORT_TEMPLATE : text);
+            message = kind === 'copy' ? '已复制所选周及日期范围。' : kind === 'template' ? '已插入空白周报模板，请按真实工作信息填写。' : '已插入所选周及日期范围。';
           } catch { message = kind === 'copy' ? '复制失败，可以选择插入日期范围，或手动选择上方日期复制。' : '插入失败，请先打开可编辑的文本笔记后重试。'; }
           finally { busy = false; if (alive) render(); }
         }

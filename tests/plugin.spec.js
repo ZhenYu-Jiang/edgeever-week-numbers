@@ -8,7 +8,11 @@ test('选择任意周并复制、插入日期范围与周报模板',async({page}
   await page.getByRole('button',{name:'选择第 2 周',exact:true}).click();await expect(page.locator('.wn-range')).toHaveText('2026-01-05 — 2026-01-11');
   await page.getByRole('button',{name:'复制日期范围'}).click();expect(await page.evaluate(()=>host.copied[0])).toBe('第2周（2026，2026-01-05 — 2026-01-11）');
   await page.getByRole('button',{name:'插入日期范围'}).click();await expect(page.getByRole('status')).toContainText('已插入');expect(await page.evaluate(()=>host.inserted[0])).toContain('2026-01-05');
-  await page.getByRole('button',{name:'插入周报模板'}).click();await expect(page.getByRole('status')).toContainText('周报模板');expect(await page.evaluate(()=>host.inserted[1])).toContain('### 本周完成');
+  await page.getByRole('button',{name:'插入周报模板'}).click();await expect(page.getByRole('status')).toContainText('空白周报模板');
+  const report=await page.evaluate(()=>host.inserted[1]);
+  expect(report.match(/^### .+$/gm)).toEqual(['### 本周完成工作','### 下周工作计划','### 本周工作总结','### 需协调与帮助']);
+  expect(report).not.toMatch(/[\p{N}〇零一二三四五六七八九十百千万亿两]/u);
+  expect(report.replace(/^### .+$/gm,'').trim()).toBe('');
 });
 test('回到本周和原命令使用最新日期，不保留打开面板时的旧周',async({page})=>{
   await page.clock.setFixedTime(new Date('2027-01-04T12:00:00'));await page.getByRole('button',{name:'回到本周'}).click();await expect(page.locator('.wn-year')).toHaveText('2027 年');await expect(page.locator('.wn-week')).toHaveText('第 1 周');
