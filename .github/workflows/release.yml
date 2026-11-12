@@ -1,0 +1,60 @@
+name: Test and release
+on:
+  push:
+    branches: [main]
+    tags: ['[0-9]+.[0-9]+.[0-9]+']
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm test
+  release:
+    if: github.event_name == 'push'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: edgeever-week-numbers-release
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Find an unpublished tagged bundle
+        id: bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RELEASE_TAG=$(node -p "JSON.parse(require('fs').readFileSync('manifest.json')).version")
+          export RELEASE_TAG
+          node --input-type=module -e "import fs from 'node:fs'; const m=JSON.parse(fs.readFileSync('manifest.json')); if(m.version!==process.env.RELEASE_TAG) throw new Error('Tag and manifest version differ'); for(const f of ['manifest.json','main.js','styles.css']) if(!fs.statSync(f).isFile()) throw new Error('Missing asset: '+f);"
+          if ! git show-ref --verify --quiet "refs/tags/$RELEASE_TAG"; then
+            echo 'Version has no published Git tag yet; skipping release.'
+            exit 0
+          fi
+          if ! git diff --quiet "$RELEASE_TAG" HEAD -- manifest.json main.js styles.css; then
+            echo 'Current bundle differs from the tagged version; skipping release.'
+            exit 0
+          fi
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo 'Release already exists; leaving its assets unchanged.'
+            exit 0
+          fi
+          echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+      - name: Publish installable release
+        if: steps.bundle.outputs.tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.bundle.outputs.tag }}
+        run: gh release create "$RELEASE_TAG" manifest.json main.js styles.css --verify-tag --title "$RELEASE_TAG" --generate-notes

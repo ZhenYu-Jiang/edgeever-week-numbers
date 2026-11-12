@@ -2,7 +2,7 @@
   "type": "plugin",
   "id": "com.example.week-numbers",
   "name": "Week Numbers",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "apiVersion": "2",
   "settingsUi": "host",
   "description": "ISO 8601 week-number calendar with the current week highlighted.",
@@ -13,6 +13,14 @@
     }
   },
   "entry": "./main.js",
-  "platforms": ["web", "desktop"],
-  "permissions": ["ui:commands", "ui:panels", "ui:notices", "editor:write"]
+  "platforms": [
+    "web",
+    "desktop"
+  ],
+  "permissions": [
+    "ui:commands",
+    "ui:panels",
+    "ui:notices",
+    "editor:write"
+  ]
 }

@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <link rel="stylesheet" href="/styles.css">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>周数表 · 隔离预览</title>
+  <style>
+    body { margin: 0; background: #f2f3ef; color: #263c30; font: 14px/1.5 system-ui, "Microsoft YaHei", sans-serif; }
+    .dialog { box-sizing: border-box; width: min(700px, calc(100% - 32px)); margin: 32px auto; padding: 24px; background: #fff; border: 1px solid #dce3db; border-radius: 18px; box-shadow: 0 16px 60px #263c3012; }
+    h1 { font-size: 20px; margin: 0 0 3px; } #description { color: #788379; margin: 0 0 20px; font-size: 13px; }
+    body.dark { background: #151a18; color: #e4ebe5; } body.dark .dialog { background: #232b26; border-color: #3d4940; }
+    @media(max-width:420px) { .dialog { width: calc(100% - 16px); margin: 8px auto; padding: 14px; } }
+  </style>
+</head>
+<body>
+  <main class="dialog"><h1 id="title"></h1><p id="description"></p><div id="container"></div></main>
+  <script type="module" src="/harness.js"></script>
+</body>
+</html>

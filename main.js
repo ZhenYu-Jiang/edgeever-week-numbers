@@ -45,6 +45,7 @@ function fmt(d) {
 
 export default {
   activate(context) {
+    let commandBusy = false;
     // 命令 1：打开周数表面板
     const disposeOpen = context.commands.register({
       id: "open-week-numbers",
@@ -61,6 +62,8 @@ export default {
       title: "插入当前周数",
       listed: true,
       async run() {
+        if (commandBusy) return;
+        commandBusy = true;
         const now = new Date();
         const { isoYear, week } = isoWeekYearOf(now);
         const text = `第${week}周（${isoYear}）`;
@@ -69,7 +72,7 @@ export default {
           context.ui.showNotice(`已插入：${text}`);
         } catch (e) {
           context.ui.showNotice("插入失败：请先打开一篇笔记并进入编辑状态");
-        }
+        } finally { commandBusy = false; }
       },
     });
 
@@ -87,20 +90,45 @@ export default {
           },
         });
 
-        const today = isoWeekYearOf(new Date());
+        let today = isoWeekYearOf(new Date());
         let year = today.isoYear;
+        let selected = { ...today }, lookupDate = '', message = '', busy = false, alive = true;
 
         const root = document.createElement("div");
         root.className = "wn-root";
         container.append(root);
 
+        function selectWeek(week, focus = true) {
+          if (busy) return;
+          selected = { isoYear: year, week }; lookupDate = fmt(mondayOfISOWeek(year, week)); message = ''; render();
+          if (focus) root.querySelector('.wn-week-choice[aria-pressed="true"]')?.focus({ preventScroll: true });
+        }
+        function selectedText() {
+          const start = mondayOfISOWeek(selected.isoYear, selected.week), end = new Date(start);
+          end.setUTCDate(start.getUTCDate() + 6);
+          return `第${selected.week}周（${selected.isoYear}，${fmt(start)} — ${fmt(end)}）`;
+        }
+        async function perform(kind) {
+          if (busy) return;
+          const text = selectedText(); busy = true;
+          root.querySelectorAll('button,input').forEach(node => { node.disabled = true; });
+          try {
+            if (kind === 'copy') await navigator.clipboard.writeText(text);
+            else await context.editor.insertAtCursor(kind === 'template' ? `## ${text}\n\n### 本周完成\n\n- \n\n### 下周计划\n\n- \n\n### 复盘\n\n` : text);
+            message = kind === 'copy' ? '已复制所选周及日期范围。' : kind === 'template' ? '已在光标处插入周报模板。' : '已插入所选周及日期范围。';
+          } catch { message = kind === 'copy' ? '复制失败，可以选择插入日期范围，或手动选择上方日期复制。' : '插入失败，请先打开可编辑的文本笔记后重试。'; }
+          finally { busy = false; if (alive) render(); }
+        }
+
         function render() {
+          if (!alive) return;
+          today = isoWeekYearOf(new Date());
           root.replaceChildren();
 
           // 当前周摘要：复用已有日期函数，仅调整展示
           const sum = document.createElement("div");
           sum.className = "wn-summary";
-          const t = isoWeekYearOf(new Date());
+          const t = selected;
           const start = mondayOfISOWeek(t.isoYear, t.week);
           const end = new Date(start);
           end.setUTCDate(start.getUTCDate() + 6);
@@ -108,7 +136,7 @@ export default {
           copy.className = "wn-summary-copy";
           const eyebrow = document.createElement("div");
           eyebrow.className = "wn-eyebrow";
-          eyebrow.textContent = "当前周 · ISO " + t.isoYear;
+          eyebrow.textContent = "所选周 · ISO " + t.isoYear;
           const headline = document.createElement("div");
           headline.className = "wn-week";
           headline.textContent = "第 " + t.week + " 周";
@@ -118,7 +146,7 @@ export default {
           copy.append(eyebrow, headline, range);
           const mark = document.createElement("span");
           mark.className = "wn-summary-mark";
-          mark.textContent = "本周";
+          mark.textContent = selected.isoYear === today.isoYear && selected.week === today.week ? "本周" : "已选";
           sum.append(copy, mark);
           root.append(sum);
 
@@ -131,7 +159,8 @@ export default {
           prev.textContent = "‹";
           prev.title = "上一年";
           prev.setAttribute("aria-label", "上一年");
-          prev.onclick = () => { year -= 1; render(); };
+          prev.disabled = year <= 1900;
+          prev.onclick = () => { year -= 1; selectWeek(1, false); };
           const label = document.createElement("div");
           label.className = "wn-year";
           label.textContent = `${year} 年`;
@@ -141,14 +170,31 @@ export default {
           next.textContent = "›";
           next.title = "下一年";
           next.setAttribute("aria-label", "下一年");
-          next.onclick = () => { year += 1; render(); };
+          next.disabled = year >= 2100;
+          next.onclick = () => { year += 1; selectWeek(1, false); };
           const todayBtn = document.createElement("button");
           todayBtn.type = "button";
           todayBtn.className = "wn-today";
-          todayBtn.textContent = "回到今年";
-          todayBtn.onclick = () => { year = today.isoYear; render(); };
+          todayBtn.textContent = "回到本周";
+          todayBtn.onclick = () => { today = isoWeekYearOf(new Date()); year = today.isoYear; selectWeek(today.week, false); };
           nav.append(prev, label, next, todayBtn);
           root.append(nav);
+
+          const tools = document.createElement('div'); tools.className = 'wn-tools';
+          const dateLabel = document.createElement('label'); dateLabel.textContent = '查询日期';
+          const date = document.createElement('input'); date.type = 'date'; date.min = '1900-01-01'; date.max = '2100-12-31'; date.value = lookupDate;
+          date.onchange = () => {
+            if (!date.value || !date.validity.valid) return;
+            const day = new Date(date.value + 'T12:00:00'), found = isoWeekYearOf(day);
+            if (found.isoYear < 1900 || found.isoYear > 2100) { context.ui.showNotice('支持查询 ISO 1900—2100 年。'); return; }
+            selected = found; year = found.isoYear; lookupDate = date.value; message = ''; render(); root.querySelector('input[type="date"]')?.focus({ preventScroll: true });
+          };
+          dateLabel.append(date); tools.append(dateLabel);
+          const actions = document.createElement('div'); actions.className = 'wn-actions';
+          for (const [kind, label] of [['copy','复制日期范围'],['insert','插入日期范围'],['template','插入周报模板']]) {
+            const b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.onclick = () => perform(kind); actions.append(b);
+          }
+          tools.append(actions); root.append(tools);
 
           // 周数表
           const weeks = weeksInISOYear(year);
@@ -173,9 +219,14 @@ export default {
             const isCurrent = year === today.isoYear && w === today.week;
             const tr = document.createElement("tr");
             if (isCurrent) tr.className = "wn-current";
+            const isSelected = year === selected.isoYear && w === selected.week;
+            if (isSelected) tr.classList.add('wn-selected-row');
+            tr.onclick = () => selectWeek(w);
             const c1 = document.createElement("td");
-            const weekLabel = document.createElement("span");
-            weekLabel.className = "wn-week-label";
+            const weekLabel = document.createElement("button");
+            weekLabel.type = 'button'; weekLabel.className = "wn-week-label wn-week-choice";
+            weekLabel.setAttribute('aria-label', `选择第 ${w} 周`); weekLabel.setAttribute('aria-pressed', String(isSelected));
+            weekLabel.onclick = event => { event.stopPropagation(); selectWeek(w); };
             weekLabel.textContent = "W" + String(w).padStart(2, "0");
             c1.append(weekLabel);
             if (isCurrent) {
@@ -219,10 +270,11 @@ export default {
           count.textContent = "全年 " + weeks + " 周";
           foot.append(rule, count);
           root.append(foot);
+          const status = document.createElement('div'); status.className = 'wn-status'; status.setAttribute('role','status'); status.textContent = message || '点击某一周，再复制或插入日期范围。'; root.append(status);
 
           // 自动滚动到当前周
-          if (year === today.isoYear) {
-            const cur = root.querySelector(".wn-current");
+          if (year === selected.isoYear) {
+            const cur = root.querySelector(".wn-selected-row");
             if (cur) {
               // 只滚动表格，不移动宿主笔记页面。
               const offset = cur.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
@@ -233,7 +285,7 @@ export default {
 
         render();
 
-        return () => root.remove();
+        return () => { alive = false; root.remove(); };
       },
     });
 
